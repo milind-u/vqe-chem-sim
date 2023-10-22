@@ -21,7 +21,6 @@ from qiskit.opflow import Z2Symmetries
 import numpy as np
 import matplotlib
 
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 from enum import Enum, auto
