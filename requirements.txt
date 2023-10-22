@@ -1,5 +1,6 @@
 matplotlib==3.6.3
 numpy==1.23.5
+pyscf==2.4.0
 qiskit==0.44.2
 qiskit_aer==0.12.2
 qiskit_aqua==0.9.5
