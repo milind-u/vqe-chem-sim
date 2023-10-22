@@ -1,0 +1,9 @@
+matplotlib==3.6.3
+numpy==1.23.5
+qiskit==0.44.2
+qiskit_aer==0.12.2
+qiskit_aqua==0.9.5
+qiskit_ignis==0.7.1
+qiskit_nature==0.6.2
+qiskit_terra==0.25.2.1
+streamlit==1.27.2
