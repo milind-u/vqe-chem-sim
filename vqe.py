@@ -26,7 +26,7 @@ from enum import Enum, auto
 
 
 class EstimatorType(Enum):
-    """ Type of minimum energy estimator. """
+    """ Type of molecule energy estimator. """
     NOISELESS = auto()
     NOISY = auto()
 
