@@ -16,7 +16,7 @@ ESTIMATOR_MAP = {
 def main():
     st.title("Quantum Chemistry Simulator")
     st.subheader(
-        "Simulate a molecule to see what its ideal interatomic distance is!")
+        "Simulate a molecule using a Variational Quantum Eigensolver to see what its ideal interatomic distance is!")
 
     molecule = st.selectbox("Molecule", tuple(MOLECULE_MAP.keys()))
     estimator = st.selectbox("Estimator", tuple(ESTIMATOR_MAP.keys()))
@@ -25,15 +25,16 @@ def main():
         return
 
     vqe_sim_result = None
-    with st.spinner(text="Simulating molecule..."):
+    with st.spinner(text="Simulating molecule (this may take a while)..."):
         vqe_sim_result = vqe.compute_interatomic_distance(
             MOLECULE_MAP[molecule], ESTIMATOR_MAP[estimator])
 
     st.info("Ideal interatomic distance: %.2f angstrom" %
             vqe_sim_result.interatomic_distance)
     st.caption(
-        "Note that this distance may differ from the true value by up to .1 angstrom (1 * 10<sup>-11</sup>) m due to needed optimizations.",
+        "Note: this distance may differ from the true value by up to .1 angstrom (1 * 10<sup>-11</sup>) m due to needed optimizations.",
         unsafe_allow_html=True)
+    st.image(vqe_sim_result.molecule_image, caption="%s molecule" % molecule, clamp=True, channels="BGR")
     st.image(vqe_sim_result.plot_image, caption="Simulation Plot")
     st.text("Ideal bonding distance has the lowest energy associated with it.")
 
