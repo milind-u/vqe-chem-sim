@@ -1,5 +1,7 @@
 matplotlib==3.6.3
 numpy==1.23.5
+opencv_contrib_python==4.7.0.72
+opencv_python==4.7.0.72
 pyscf==2.4.0
 qiskit==0.44.2
 qiskit_aer==0.12.2
