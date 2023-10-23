@@ -121,7 +121,8 @@ class VqeQubitOperation:
     """ Holds data about the hamiltonian and its mapped qubit operation. """
 
     def __init__(self, operation, num_particles, num_spatial_orbitals, problem, mapper):
-        """ Constructs a VqeQubitOperation with the given qubit operation, information about the molecule, and hamiltonian to qubit operation mapper """
+        """ Constructs a VqeQubitOperation with the given qubit operation, information about the molecule,
+            and hamiltonian to qubit operation mapper """
         self.operation = operation
         self.num_particles = num_particles
         self.num_spatial_orbitals = num_spatial_orbitals
@@ -130,7 +131,8 @@ class VqeQubitOperation:
 
 
 def get_qubit_op(molecule_type, dist):
-    """ Returns a qubit operation representing the hamiltonian for the given molecule, at the given interatomic distance. """
+    """ Returns a qubit operation representing the hamiltonian for the given molecule,
+        at the given interatomic distance. """
 
     # Define the molecule.
     molecule = MoleculeInfo(
@@ -152,7 +154,11 @@ def get_qubit_op(molecule_type, dist):
     num_particles = problem.num_particles
     num_spatial_orbitals = problem.num_spatial_orbitals
 
-    # Map the hamiltonian into a qubit operator.
+    # Map the hamiltonian into a qubit operator, which is a combination of Pauli gates.
+    # Parity mapping encodes the parity of the occupation numbers of fermionic modes into one qubit,
+    # while keeping the actual occupation information spread across all qubits.
+    # This mapping uses symmetries in the resulting qubit operation to taper (remove) 2 qubits
+    # from the circuit!
     mapper = ParityMapper(num_particles=num_particles)
     hamiltonian = problem.second_q_ops()[0]
     operation = mapper.map(hamiltonian)
@@ -160,24 +166,30 @@ def get_qubit_op(molecule_type, dist):
 
 
 def get_vqe(estimator_type, qubit_op):
-    """ Returns a qiskit VQE object with the given estimator type, the appropriate optimizer and variational form for this estimator, and the given qubit operation. """
-
+    """ Returns a qiskit VQE object with the given estimator type, the appropriate optimizer
+        and variational form for this estimator, and the given qubit operation. """
+    # Lets us choose between a noiseless estimation vs faking a noisy IBM quantum computer.
     estimator = None
+    # Classical optimization method to find the minimum energy.
     optimizer = None
+    # Unitary operation taking in the current parameters and producing the qubit state.
     var_form = None
 
     if estimator_type == EstimatorType.NOISELESS:
         estimator = Estimator(approximation=True)
+        # Sequential Least Squares Programming is ideal in noiseless enviornments.
         optimizer = SLSQP(maxiter=10)
+        # Use Hartree Fock as the starting qubit state
         init_state = HartreeFock(qubit_op.num_spatial_orbitals, qubit_op.num_particles,
                                  qubit_op.mapper)
+        # UCCSD gets accurate results when starting from Harrtee Fock state.
         var_form = UCCSD(qubit_op.num_spatial_orbitals,
                          qubit_op.num_particles,
                          qubit_op.mapper,
                          initial_state=init_state)
     else:
         assert estimator_type == EstimatorType.NOISY
-        # Fake IBM device.
+        # Use the noise model and qubit coupling map from a fake IBM device.
         device = FakeMelbourne()
         coupling_map = device.configuration().coupling_map
         noise_model = NoiseModel.from_backend(device)
@@ -185,7 +197,10 @@ def get_vqe(estimator_type, qubit_op):
             "coupling_map": coupling_map,
             "noise_model": noise_model
         })
+        # Simultaneous Perturbation Stochastic Approximation optimization approximates the gradient
+        # with only two measurements by changing all the parameters with randomness - better in noisy environments.
         optimizer = SPSA(maxiter=100)
+        # Use a hardware-efficient circuit.
         var_form = EfficientSU2(qubit_op.operation.num_qubits)
 
     return (VQE(estimator, var_form, optimizer, initial_point=[0] * var_form.num_parameters)
@@ -196,7 +211,8 @@ class VqeSimResult:
     """ Class that represents the output of a VQE molecule simulation. """
 
     def __init__(self, interatomic_distance, plot_image, molecule_image):
-        """ Constructs a simulation result with the given ideal interatomic distance, image of all data plotted, and the molecule drawing. """
+        """ Constructs a simulation result with the given ideal interatomic distance,
+            image of all data plotted, and the molecule drawing. """
         self.interatomic_distance = interatomic_distance
         self.plot_image = plot_image
         self.molecule_image = molecule_image
@@ -219,7 +235,8 @@ def plot_sim_results(distances, ground_state_energies):
 
 
 def compute_interatomic_distance(molecule_type, estimator_type):
-    """ Uses VQE to simulate the given molecule and compute its interatomic distances by minimizing its ground state energy. """
+    """ Uses VQE to simulate the given molecule and compute its interatomic distances by
+        minimizing its ground state energy. """
     # Sweep a reasonable range of interatomic distances, in angstrom.
     distances = np.arange(0.5, 2.01, 0.25)
     # Keep track of the ground state energy (minimum eigenvalue of hamiltonian) at each distance.
@@ -234,7 +251,14 @@ def compute_interatomic_distance(molecule_type, estimator_type):
         qubit_op = get_qubit_op(molecule_type, dist)
         vqe = get_vqe(estimator_type, qubit_op)
         # Compute the ground state energy for the molecule.
-        # This involves using an ansatz (guess for minimum energy qubit state) with variable parameters, and using quantum computing to compute the energy by finding the expectation value of the hamiltonian (basically a weighted average of all possible measurements). It then uses classical optimization to find the ideal ansatz parameters to minimize that energy, and estimate the ground state energy.
+        # The eigenvalue of the hamiltonian (which describes the total energy of the molecule) associated with a qubit state
+        # is its energy, by the equation:
+        # Ĥ|Ψ(θ)⟩ = E|Ψ(θ)⟩.
+        # Notice that the qubit state has variable parameters θ. This is our current guess for the minimum energy qubit state
+        # called an ansatz. We use quantum computing to compute the energy by finding the expectation value of the hamiltonian
+        # (basically a weighted average of all possible measurements), by the equation:
+        # E = ⟨Ψ(θ)|Ĥ|Ψ(θ)⟩
+        # We then use classical optimization to find the ideal parameters θ that minimize E, estimating the ground state energy E_0.
         vqe_calc = vqe.compute_minimum_eigenvalue(qubit_op.operation)
         energy_0 = qubit_op.problem.interpret(vqe_calc).total_energies[0].real
         ground_state_energies.append(energy_0)
