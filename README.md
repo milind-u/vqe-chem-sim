@@ -31,4 +31,4 @@ Note that distances are simulated in increments of .05 angstrom.
 <br>
 ![](<sample_images/BeH2_noiseless.jpg>)
 <br>
-Coming soon: BeH<sub>2</sub> with noisy simulation</b>
+Coming soon: <b>BeH<sub>2</sub> with noisy simulation</b>
