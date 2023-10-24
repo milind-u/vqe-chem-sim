@@ -10,5 +10,20 @@ Web app to simulate a few different molecules, computing their ideal atomic bond
 
 # Simulation results
 Note that distances are simulated in increments of .05 angstrom.
-H<sub>2</sub> with noiseless simulation
+<br>
+<b>H<sub>2</sub> with noiseless simulation</b>
 ![](<sample_images/H2_noiseless.png>)
+<br>
+<b>H<sub>2</sub> with noisy simulation</b>
+![](<sample_images/H2_noisy.png>)
+<br>
+<b>LiH with noiseless simulation</b>
+![](<sample_images/LiH_noiseless.png>)
+<br>
+<b>LiH with noisy simulation</b>
+![](<sample_images/LiH_noiseless.png>)
+<br>
+<b>BeH<sub>2</sub> with noiseless simulation</b>
+![](<sample_images/BeH2_noiseless.png>)
+<br>
+Coming soon: BeH<sub>2</sub> with noisy simulation</b>
