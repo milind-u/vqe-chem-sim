@@ -36,6 +36,7 @@ def main():
 
     # Output the results!
     st.info("Ideal interatomic distance: %.2f angstrom" % vqe_sim_result.interatomic_distance)
+    st.caption("1 angstrom = 1 * 10<sup>-10</sup> m", unsafe_allow_html=True)
     st.caption(
         "Note: this distance may slightly differ from the true value due to needed computational optimizations.",
         unsafe_allow_html=True)

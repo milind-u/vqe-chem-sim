@@ -44,10 +44,14 @@ class Atom:
 class Molecule:
     """ Class to hold the atoms of a molecule and their basic coordinates. """
 
-    def __init__(self, atoms, unscaled_coords):
-        """ Creates a molecule with the given atoms and their unscaled coordinates in the molecule. """
+    def __init__(self, atoms, unscaled_coords, distance_range):
+        """ Creates a molecule with the given atoms, their unscaled coordinates in the molecule, and
+            the range of interatomic distances to simulate. """
         self.atoms = atoms
         self.unscaled_coords = unscaled_coords
+        # Each molecule has a specific range around the actual distance,
+        # so we avoid too much computation and taking too much time for the user.
+        self.distance_range = distance_range
 
     def symbols(self):
         """ Returns a list of all the atoms symbols in order. """
@@ -75,9 +79,10 @@ class Molecule:
 
         for i, atom in enumerate(self.atoms):
             # Draw a circle for the atom with a proportional position and radius.
-            compute_coords = lambda j: (center_x // 2 + to_px(self.unscaled_coords[j][
-                0] * interatomic_distance), center_y + to_px(self.unscaled_coords[j][1] *
-                                                             interatomic_distance))
+            compute_coords = lambda j: (
+                (center_x // 2 if len(self.atoms) <= 2 else center_x) + to_px(self.unscaled_coords[
+                    j][0] * interatomic_distance), center_y + to_px(self.unscaled_coords[j][1] *
+                                                                    interatomic_distance))
             coords = compute_coords(i)
             atom_drawn_radius = lambda j: to_px(np.sqrt(self.atoms[j].atomic_number) * 0.15)
 
@@ -110,11 +115,14 @@ class Element(Enum):
 
 class MoleculeType(Enum):
     """ The specific molecules allowed in this simulation. """
-    H2 = Molecule([Element.H.value, Element.H.value], np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]))
+    H2 = Molecule([Element.H.value, Element.H.value], np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+                  np.arange(0.6, 0.8, 0.05))
     LI_H = Molecule([Element.LI.value, Element.H.value], np.array([[0.0, 0.0, 0.0], [1.0, 0.0,
-                                                                                     0.0]]))
+                                                                                     0.0]]),
+                    np.arange(1.5, 1.7, 0.05))
     BE_H2 = Molecule([Element.H.value, Element.BE.value, Element.H.value],
-                     np.array([[-1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]))
+                     np.array([[-1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+                     np.arange(1.2, 1.4, 0.05))
 
 
 class VqeQubitOperation:
@@ -238,7 +246,7 @@ def compute_interatomic_distance(molecule_type, estimator_type):
     """ Uses VQE to simulate the given molecule and compute its interatomic distances by
         minimizing its ground state energy. """
     # Sweep a reasonable range of interatomic distances, in angstrom.
-    distances = np.arange(0.5, 2.01, 0.25)
+    distances = molecule_type.value.distance_range
     # Keep track of the ground state energy (minimum eigenvalue of hamiltonian) at each distance.
     ground_state_energies = []
 
