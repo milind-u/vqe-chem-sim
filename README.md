@@ -25,7 +25,7 @@ Note that distances are simulated in increments of .05 angstrom.
 <br>
 <b>LiH with noisy simulation</b>
 <br>
-![](<sample_images/LiH_noiseless.jpg>)
+![](<sample_images/LiH_noisy.jpg>)
 <br>
 <b>BeH<sub>2</sub> with noiseless simulation</b>
 <br>
